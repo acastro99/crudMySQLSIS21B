@@ -1,11 +1,19 @@
 package com.example.crudmysqlandroid;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 
+import com.android.volley.AuthFailureError;
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
@@ -13,6 +21,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.text.Layout;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -20,10 +29,18 @@ import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class MainActivity extends AppCompatActivity{
+
+    EditText edtUsuario, edtPassword;
+    Button btnLogin;
+
 
     private EditText et_codigo, et_descripcion, et_precio;
     private Button btn_guardar, btn_consultaCodigo, btn_consultaDescripcion, btn_eliminar, btn_actualizar;
@@ -46,6 +63,8 @@ public class MainActivity extends AppCompatActivity{
     boolean estadoEliminar = false;
 
     AlertDialog.Builder dialogo;
+
+    LinearLayout include;
 
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
@@ -80,6 +99,19 @@ public class MainActivity extends AppCompatActivity{
         toolbar.setSubtitleTextColor(getResources().getColor(R.color.mycolor));
         toolbar.setTitle("Simón Castro");
         setSupportActionBar(toolbar);
+
+        edtUsuario = findViewById(R.id.edtUsuario);
+        edtPassword = findViewById(R.id.edtPassword);
+
+        include = findViewById(R.id.include);
+
+        btnLogin = findViewById(R.id.btnLogin);
+        btnLogin.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                validarUsuario("http://192.168.43.29/developeru/validar_usuario.php");
+            }
+        });
 
         ///y esto para pantalla completa (oculta incluso la barra de estado)
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -220,11 +252,13 @@ public class MainActivity extends AppCompatActivity{
                     inputEt = false;
                 }else {
                     inputEt=true;
+                    include.setVisibility(View.VISIBLE);
                 }
 
                 if(inputEt) {
                     String codigo = et_codigo.getText().toString();
                     manto.consultarCodigo(MainActivity.this, codigo);
+                    include.setVisibility(View.VISIBLE);
                     et_codigo.requestFocus();
                 }
                 //End
@@ -423,6 +457,33 @@ public class MainActivity extends AppCompatActivity{
         return precio;   //return preferences.getString("tiempo", "Sin configurar.");
     }
 
+    private  void validarUsuario(String URL){
+        StringRequest stringRequest = new StringRequest(Request.Method.POST, URL, new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                if (!response.isEmpty()){
+                        include.setVisibility(View.VISIBLE);
+                }else{
+                    Toast.makeText(MainActivity.this, "Usuario o contraseña incorrectas!!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+            }
+        }){
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> parametros = new HashMap<String, String>();
+                parametros.put("usuario", edtUsuario.getText().toString());
+                parametros.put("password", edtPassword.getText().toString());
+                return parametros;
+            }
+        };
 
+        RequestQueue requestQueue = Volley.newRequestQueue(this);
+        requestQueue.add(stringRequest);
+    }
 
 }

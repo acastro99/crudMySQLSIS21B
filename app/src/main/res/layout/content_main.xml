@@ -8,7 +8,9 @@
     android:background="#8AAACF"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
-    tools:showIn="@layout/activity_main">
+    tools:showIn="@layout/activity_main"
+    android:id="@+id/include"
+    android:visibility="invisible">
 
     <TextView
         android:id="@+id/tv"
